@@ -1,0 +1,22 @@
+[package]
+name = "auth_data"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+test-utils = []
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# Will be defined in the workspace manifest
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+bson = { workspace = true, features = ["chrono-0_4"] }
+chrono = { workspace = true, features = ["serde"] }
+mongodb = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+tracing = { workspace = true }
+uuid = { workspace = true, features = ["v4"] } 

@@ -1,0 +1,30 @@
+[package]
+name = "auth_feature"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# Will be defined in the workspace manifest
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+chrono = { workspace = true }
+prost = { workspace = true }
+prost-types = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["full", "test-util"] }
+tonic = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+uuid = { workspace = true }
+mongodb = { workspace = true }
+jsonwebtoken = { workspace = true }
+
+# Local dependencies
+auth_domain = { path = "auth_domain" }
+auth_data = { path = "auth_data" }
+
+[build-dependencies]
+tonic-build = { workspace = true }

@@ -1,0 +1,35 @@
+[package]
+name = "auth_domain"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# Will be defined in the workspace manifest
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+bson = { workspace = true }
+chrono = { workspace = true }
+rand = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["full", "test-util"] }
+uuid = { workspace = true }
+hex = { workspace = true }
+ring = { workspace = true }
+jsonwebtoken = { workspace = true }
+strum_macros = { workspace = true }
+mongodb = { workspace = true}
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Local dependencies
+# This will be created later
+auth_data = { path = "../auth_data", features = ["test-utils"] }
+
+# Added regex dependency
+regex = { workspace = true }
+
+# Added regex dependency
+# regex = "1.10.2"  # This line should be removed 
