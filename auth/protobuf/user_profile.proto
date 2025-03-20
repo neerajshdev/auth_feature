@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package auth.protobuf;
+import "google/protobuf/timestamp.proto";
+
+message UserProfileMessage {
+  string id = 1;
+  string fullname = 2;
+  string username = 3;
+  optional string country = 4;
+  google.protobuf.Timestamp birthdate = 5;
+  optional string profile_picture = 6;
+  GenderMessage gender = 7;
+  repeated ContactMessage contacts = 8;
+  optional string bio = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}
+
+
+enum GenderMessage {
+  MALE = 0;
+  FEMALE = 1;
+  OTHER = 2;
+}
+
+// Contact message definition
+message ContactMessage {
+  ContactTypeMsg contact_type = 1;
+  string value = 2;
+  bool is_primary = 3;
+  google.protobuf.Timestamp verified_at = 4;
+
+  enum ContactTypeMsg {
+    EMAIL = 0;
+    PHONE = 1;
+  }
+}
+
+
+
+
