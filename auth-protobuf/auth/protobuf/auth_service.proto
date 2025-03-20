@@ -1,0 +1,351 @@
+syntax = "proto3";
+package auth.protobuf;
+
+import "google/protobuf/timestamp.proto";
+import "auth/protobuf/user_profile.proto";
+
+message GetProfileRequest {
+  string session_token = 1;
+}
+
+message GetProfileResponse {
+  UserProfileMessage user = 1;
+}
+
+message DeleteAccountRequest {
+  string session_token = 1;
+}
+
+message DeleteAccountResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message UpdatePasswordRequest {
+  string session_token = 1;
+  string current_password = 2;
+  string new_password = 3;
+}
+
+message UpdatePasswordResponse {
+  bool success = 1;
+  string message = 2;
+
+  enum PasswordErrorMsg {
+    NONE = 0;
+    WEAK_PASSWORD = 1;
+    SAME_PASSWORD = 2;
+    PASSWORD_REUSE = 3;
+  }
+
+  PasswordErrorMsg error_code = 3;
+}
+
+message OtpChallengeRequest {
+  string contact_value = 1;
+  ContactMessage.ContactTypeMsg contact_type = 2;
+  ActionTypeMsg action_type = 3;
+  optional string session_token = 4;
+
+  // Critical Actions 
+  enum ActionTypeMsg {
+    REGISTRATION = 0;
+    PASSWORD_RESET = 1;
+    DELETE_ACCOUNT = 2;
+    ADD_CONTACT = 3;
+  }
+}
+
+message OtpChallengeResponse {
+  string otp_challenge_token = 1;
+  string message = 2;
+}
+
+
+message ConfirmOtpRequest {
+  string challenge_token = 1;
+  string otp = 2;
+}
+
+message ConfirmOtpResponse {
+  bool success = 1;
+  optional string action_token = 2;
+  ErrorCodeMsg error_code = 3;
+
+  enum ErrorCodeMsg {
+    NONE = 0;
+    INVALID = 1;
+    EXPIRED = 2;
+    MAX_ATTEMPTS_REACHED = 3;
+    UNKNOWN_ERROR = 4;
+  }
+}
+
+message CheckUsernameRequest {
+  string username = 1;
+  string session_token = 2;
+}
+
+message CheckUsernameResponse {
+  CheckResult result = 1;
+
+  enum CheckResult {
+    VALID = 0;      // Username is valid and unique
+    INVALID = 1;    // Username is not valid
+    ALREADY_TAKEN = 2; // Username is taken
+  }
+}
+
+message LoginRequest {
+  oneof loginBy {
+    string email = 1;
+    string username = 2;
+    string phone = 3;
+  }
+  string password = 4;
+}
+
+message LoginResponse {
+  string session_token = 1;
+  UserProfileMessage user = 2;
+}
+
+message RegisterRequest {
+  string action_token = 1;
+  string username = 2;
+  string password = 3;
+  string fullname = 4;
+  google.protobuf.Timestamp birthdate = 5;
+  GenderMessage gender = 6;
+  optional string country = 7;
+  repeated string roles = 8;
+}
+
+message RegisterResponse {
+  string session_token = 1;
+  UserProfileMessage user = 2;
+}
+
+message UpdateProfileRequest {
+  string session_token = 1;
+  optional string fullname = 2;
+  optional string profile_picture = 3;
+  optional GenderMessage gender = 4;
+  optional string country = 5;
+  optional string bio = 6;
+  optional google.protobuf.Timestamp birthdate = 7;
+}
+
+message UpdateProfileResponse {
+  UserProfileMessage user = 2;
+}
+
+message AddContactRequest {
+  string session_token = 1;
+  string action_token = 2; 
+  ContactMessage.ContactTypeMsg contact_type = 3;
+  string value = 4;
+}
+
+message AddContactResponse {
+  bool success = 1;
+}
+
+message RemoveContactRequest {
+  string session_token = 1;
+  ContactMessage.ContactTypeMsg contact_type = 2;
+}
+
+message RemoveContactResponse {
+  bool success = 1;
+}
+
+message SetPrimaryContactRequest {
+  string session_token = 1;
+  ContactMessage.ContactTypeMsg contact_type = 2;
+}
+
+message SetPrimaryContactResponse {
+  bool success = 1;
+}
+
+message LogoutRequest {
+  string session_token = 1;
+}
+
+message LogoutResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+  string session_token = 1;
+}
+
+message AddRoleRequest {
+  string user_id = 1;
+  string role = 2;
+}
+
+message AddRoleResponse {
+  bool success = 1;
+}
+
+message RemoveRoleRequest {
+  string user_id = 1;
+  string role = 2;
+}
+
+message RemoveRoleResponse {
+  bool success = 1;
+}
+
+message GetRolesRequest {
+  string user_id = 1;
+}
+
+message GetRolesResponse {
+  repeated string roles = 1;
+}
+
+message ResetPasswordRequest {
+  string action_token = 1;  // Token from OTP verification
+  string new_password = 2;     // New password to set
+}
+
+message ResetPasswordResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+service AuthGrpcService {
+  // Authentication
+  
+  /**
+   * Authenticates a user using their credentials (email, username, or phone) and password.
+   * Returns a session token and user profile on successful authentication.
+   */
+  rpc Login(LoginRequest) returns (LoginResponse);
+  
+  /**
+   * Invalidates the current session token, effectively logging out the user.
+   * Requires a valid session token in the request.
+   */
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  
+  /**
+   * Generates a new session token using a valid refresh token.
+   * Used to extend user sessions without requiring re-authentication.
+   */
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+
+  // Registration & Account Management
+  
+  /**
+   * Completes user registration after OTP verification.
+   * Requires a valid temporary token from OTP confirmation and user details.
+   * Returns a session token and user profile on successful registration.
+   */
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  
+  /**
+   * Marks the user's account as deleted (soft delete) after confirmation.
+   * Requires a valid session token in the request.
+   */
+  rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
+  
+  /**
+   * Resets the user's password after OTP verification.
+   * Requires a valid temporary token from OTP confirmation and the new password.
+   */
+  rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
+
+  // OTP Verification
+  
+  /**
+   * Initiates an OTP challenge for registration, login, or password reset.
+   * Sends an OTP to the provided email address.
+   */
+  rpc OtpChallenge(OtpChallengeRequest) returns (OtpChallengeResponse);
+  
+  /**
+   * Verifies the OTP code provided by the user.
+   * Returns a temporary token for the next step in the process.
+   */
+  rpc ConfirmOtp(ConfirmOtpRequest) returns (ConfirmOtpResponse);
+
+  // Password Management
+  
+  /**
+   * Updates the user's password after verifying the current password.
+   * Requires the current password and the new password.
+   */
+  rpc UpdatePassword(UpdatePasswordRequest) returns (UpdatePasswordResponse);
+
+  // Profile Management
+  
+  /**
+   * Retrieves the authenticated user's profile information.
+   * Requires a valid session token in the request.
+   */
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+  
+  /**
+   * Updates the user's profile information.
+   * Allows partial updates of profile fields.
+   * Requires a valid session token in the request.
+   */
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+
+  // Contact Management
+  
+  /**
+   * Adds a new contact (email or phone) to the user's profile.
+   * Requires a valid session token and action token in the request.
+   */
+  rpc AddContact(AddContactRequest) returns (AddContactResponse);
+  
+  /**
+   * Removes a contact from the user's profile.
+   * Requires a valid session token in the request.
+   */
+  rpc RemoveContact(RemoveContactRequest) returns (RemoveContactResponse);
+  
+  /**
+   * Sets a contact as the primary contact for its type (email or phone).
+   * Requires a valid session token in the request.
+   */
+  rpc SetPrimaryContact(SetPrimaryContactRequest) returns (SetPrimaryContactResponse);
+
+  // Validation
+  
+  /**
+   * Checks if a username is available and valid.
+   * Returns whether the username is valid, invalid, or already taken.
+   */
+  rpc CheckUsername(CheckUsernameRequest) returns (CheckUsernameResponse);
+
+  // Role Management
+  
+  /**
+   * Adds a role to the user's profile.
+   * Requires the user ID and role name in the request.
+   */
+  rpc AddRole(AddRoleRequest) returns (AddRoleResponse);
+  
+  /**
+   * Removes a role from the user's profile.
+   * Requires the user ID and role name in the request.
+   */
+  rpc RemoveRole(RemoveRoleRequest) returns (RemoveRoleResponse);
+  
+  /**
+   * Retrieves the list of roles assigned to a user.
+   * Requires the user ID in the request.
+   */
+  rpc GetRoles(GetRolesRequest) returns (GetRolesResponse);
+}
